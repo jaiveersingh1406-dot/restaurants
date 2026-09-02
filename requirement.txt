@@ -6,3 +6,5 @@ pydantic
 python-multipart
 cloudinary
 razorpay
+PyJWT
+passlib[bcrypt]
