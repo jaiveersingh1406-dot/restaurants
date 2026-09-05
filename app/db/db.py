@@ -6,7 +6,10 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-_DATABASE_URL = os.environ.get("DATABASE_URL")
+_DATABASE_URL = os.environ.get(
+    "DATABASE_URL",
+    "postgresql://postgres.knftpdrmnnhrhgxafkco:94143678%40Kk@aws-0-ap-south-1.pooler.supabase.com:6543/postgres",
+)
 
 
 class _Connection:
