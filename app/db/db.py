@@ -1,23 +1,39 @@
 import os
 
-import mysql.connector
+import psycopg2
+import psycopg2.extras
 from dotenv import load_dotenv
 
 load_dotenv()
 
-_DEFAULT_HOST = os.environ.get("DB_HOST", "localhost")
-_DEFAULT_USER = os.environ.get("DB_USER", "root")
-_DEFAULT_PASSWORD = os.environ.get("DB_PASSWORD", "root1234")
-_DEFAULT_NAME = os.environ.get("DB_NAME", "restaurant")
+_DATABASE_URL = os.environ.get("DATABASE_URL")
+
+
+class _Connection:
+    """Thin wrapper so existing code can keep using
+    connection.cursor(dictionary=True) the same way it did with MySQL."""
+
+    def __init__(self, conn):
+        self._conn = conn
+
+    def cursor(self, dictionary=False):
+        if dictionary:
+            return self._conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        return self._conn.cursor()
+
+    def commit(self):
+        self._conn.commit()
+
+    def close(self):
+        self._conn.close()
 
 
 def get_connection():
-    return mysql.connector.connect(
-        host=_DEFAULT_HOST,
-        user=_DEFAULT_USER,
-        password=_DEFAULT_PASSWORD,
-        database=_DEFAULT_NAME,
-    )
+    if not _DATABASE_URL:
+        raise RuntimeError(
+            "DATABASE_URL is not set. Add your Supabase connection string to .env / Render env vars."
+        )
+    return _Connection(psycopg2.connect(_DATABASE_URL))
 
 
 def connection():

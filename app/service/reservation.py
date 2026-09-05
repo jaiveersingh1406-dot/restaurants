@@ -53,7 +53,8 @@ def create_reservation(reservation_data):
         cursor.execute(
             """INSERT INTO reservations
                (customer_name, guests, reservation_date, time_slot, phone, table_no, special_request, status)
-               VALUES (%s, %s, %s, %s, %s, %s, %s, %s)""",
+               VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+               RETURNING id""",
             (
                 reservation_data.customer_name,
                 reservation_data.guests,
@@ -67,7 +68,7 @@ def create_reservation(reservation_data):
         )
 
         connection.commit()
-        reservation_id = cursor.lastrowid
+        reservation_id = cursor.fetchone()[0]
 
         cursor.close()
         connection.close()

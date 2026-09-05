@@ -69,7 +69,8 @@ def create_order(order_data):
                (customer_name, phone, email, table_no, total, status,
                 payment_id, razorpay_order_id, razorpay_signature,
                 payment_method, payment_status, amount_paid)
-               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+               RETURNING id""",
             (
                 order_data.customer_name,
                 order_data.phone,
@@ -87,7 +88,7 @@ def create_order(order_data):
         )
 
         connection.commit()
-        order_id = cursor.lastrowid
+        order_id = cursor.fetchone()[0]
 
         if order_data.table_no:
             cursor.execute(

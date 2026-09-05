@@ -49,7 +49,8 @@ def create_product(product_data: product):
         cursor.execute(
             """INSERT INTO product
                (name, description, price, category, stock, status, image)
-               VALUES (%s, %s, %s, %s, %s, %s, %s)""",
+               VALUES (%s, %s, %s, %s, %s, %s, %s)
+               RETURNING id""",
             (
                 product_data.name,
                 product_data.description,
@@ -62,7 +63,7 @@ def create_product(product_data: product):
         )
 
         connection.commit()
-        product_id = cursor.lastrowid
+        product_id = cursor.fetchone()[0]
 
         cursor.close()
         connection.close()

@@ -93,7 +93,8 @@ def create_accounting(accounting_data):
         cursor.execute(
             """INSERT INTO accounting
                (day, revenue, expenses, orders)
-               VALUES (%s, %s, %s, %s)""",
+               VALUES (%s, %s, %s, %s)
+               RETURNING id""",
             (
                 accounting_data.day,
                 accounting_data.revenue,
@@ -103,7 +104,7 @@ def create_accounting(accounting_data):
         )
 
         connection.commit()
-        accounting_id = cursor.lastrowid
+        accounting_id = cursor.fetchone()[0]
 
         cursor.close()
         connection.close()
