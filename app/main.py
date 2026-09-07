@@ -35,6 +35,9 @@ app.add_middleware(
 )
 
 
+
+
+
 @app.get("/menu")
 def get_menu():
     connection = get_connection()
