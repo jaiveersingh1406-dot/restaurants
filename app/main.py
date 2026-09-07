@@ -19,6 +19,7 @@ from app.router.payment import router as payment_router
 
 app = FastAPI()
 CROSS_ORIGINS = [
+    "https://frontend-restaurants-livid.vercel.app",
     "http://localhost:3000",
     "http://localhost:5173",
     "http://127.0.0.1:3000",
