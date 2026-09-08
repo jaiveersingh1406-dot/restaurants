@@ -77,3 +77,49 @@ def get_gallery():
         return images
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/content/messages")
+def get_messages():
+    try:
+        connection = get_connection()
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute(
+            "SELECT id, name, email, subject, message, sent_at FROM messages ORDER BY id DESC"
+        )
+        rows = cursor.fetchall()
+        cursor.close()
+        connection.close()
+        return rows
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/content/messages")
+def create_message(payload: dict):
+    try:
+        name = (payload.get("name") or "").strip()
+        email = (payload.get("email") or "").strip()
+        subject = (payload.get("subject") or "").strip()
+        message = (payload.get("message") or "").strip()
+
+        if not name or not email or not message:
+            raise HTTPException(status_code=400, detail="Name, email and message are required")
+
+        connection = get_connection()
+        cursor = connection.cursor()
+        cursor.execute(
+            """INSERT INTO messages (name, email, subject, message)
+               VALUES (%s, %s, %s, %s)
+               RETURNING id""",
+            (name, email, subject or None, message),
+        )
+        connection.commit()
+        message_id = cursor.fetchone()[0]
+        cursor.close()
+        connection.close()
+        return {"message": "Message sent successfully", "id": message_id}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

@@ -18,6 +18,32 @@ from app.router.payment import router as payment_router
 
 
 app = FastAPI()
+
+
+@app.on_event("startup")
+def create_messages_table():
+    try:
+        connection = get_connection()
+        cursor = connection.cursor()
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS messages (
+                id SERIAL PRIMARY KEY,
+                name VARCHAR(255) NOT NULL,
+                email VARCHAR(255) NOT NULL,
+                subject VARCHAR(255),
+                message TEXT NOT NULL,
+                sent_at TIMESTAMP DEFAULT NOW()
+            )
+            """
+        )
+        connection.commit()
+        cursor.close()
+        connection.close()
+    except Exception:
+        pass
+
+
 CROSS_ORIGINS = [
     "https://frontend-restaurants-livid.vercel.app",
     "http://localhost:3000",
