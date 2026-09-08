@@ -9,7 +9,7 @@ class product(BaseModel):
     price: float
     category: Optional[str] = None
     image: Optional[str] = None
-    status: str = Field(default="Available", pattern="^(Available|Unavailable)$")
+    status: str = Field(default="Available", pattern="^(Available|Unavailable|Low Stock)$")
     stock: int = 0
     
     
