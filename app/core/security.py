@@ -10,13 +10,24 @@ ACCESS_TOKEN_EXPIRE_HOURS = 12
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
+BCRYPT_MAX_BYTES = 72
+
+
+def _truncate_password(password: str) -> str:
+    """Truncate a password to bcrypt's 72-byte limit without splitting a multibyte char."""
+    data = password.encode("utf-8")
+    if len(data) <= BCRYPT_MAX_BYTES:
+        return password
+    return data[:BCRYPT_MAX_BYTES].decode("utf-8", errors="ignore")
+
 
 def hash_password(password: str) -> str:
-    return pwd_context.hash(password)
+    return pwd_context.hash(_truncate_password(password))
 
 
 def verify_or_upgrade_password(plain_password: str, stored_hash: str, upgrade_callback=None) -> bool:
     """Verify password; supports legacy plaintext rows by upgrading them to bcrypt."""
+    plain_password = _truncate_password(plain_password)
     if stored_hash and stored_hash.startswith("$2"):
         return pwd_context.verify(plain_password, stored_hash)
 
