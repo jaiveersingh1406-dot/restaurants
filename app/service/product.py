@@ -145,16 +145,4 @@ def delete_product(product_id: int):
         return existing
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-       
-def get_alldata():
-    try:
-        connection = get_connection()
-        cursor = connection.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM product")
-        results = cursor.fetchall()
-        cursor.close()
-        connection.close()
-        return results
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
     

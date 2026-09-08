@@ -66,36 +66,6 @@ app.add_middleware(
 def health():
     return {"status": "ok", "bcrpt72_fix": True}
 
-
-
-
-
-@app.get("/menu")
-def get_menu():
-    connection = get_connection()
-    cursor = connection.cursor(dictionary=True)
-    try:
-        cursor.execute("SELECT * FROM menu")
-        menu_items = cursor.fetchall()
-        return menu_items
-    finally:
-        cursor.close()
-        connection.close()
-
-
-@app.get("/menu/{item_id}")
-def get_menu_item(item_id: int):
-    connection = get_connection()
-    cursor = connection.cursor(dictionary=True)
-    try:
-        cursor.execute("SELECT * FROM menu WHERE id = %s", (item_id,))
-        menu_item = cursor.fetchone()
-        return menu_item
-    finally:
-        cursor.close()
-        connection.close()
-
-
 app.include_router(auth_router)
 app.include_router(product_router)
 app.include_router(accounting_router)

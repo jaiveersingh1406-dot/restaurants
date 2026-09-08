@@ -1,6 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, HTTPException
 from app.schema.product import product
-from app.service.product import get_product, get_products, create_product, update_product, delete_product   
+from app.service.product import get_product, get_products, create_product, update_product, delete_product
 
 router = APIRouter()
 
@@ -10,10 +10,10 @@ def read_products():
         products = get_products()
         return products
     except HTTPException as exc:
-        raise exc   
-    
+        raise exc
+
 @router.get("/products/{product_id}")
-def read_product(product_id: int):  
+def read_product(product_id: int):
     try:
         product = get_product(product_id)
         if product is None:
@@ -21,14 +21,6 @@ def read_product(product_id: int):
         return product
     except HTTPException as exc:
         raise exc
-@router.get("/products")
-def alldata():
-    try:
-        products = get_products()
-        return products
-    except HTTPException as exc:
-        raise exc
-    
 
 @router.post("/products")
 def create_new_product(product: product):

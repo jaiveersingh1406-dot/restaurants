@@ -50,20 +50,6 @@ def get_reviews():
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/content/chefs")
-def get_chefs():
-    try:
-        connection = get_connection()
-        cursor = connection.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM chefs ORDER BY id ASC")
-        rows = cursor.fetchall()
-        cursor.close()
-        connection.close()
-        return rows
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
 @router.get("/content/gallery")
 def get_gallery():
     try:
