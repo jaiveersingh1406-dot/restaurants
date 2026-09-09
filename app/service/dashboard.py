@@ -50,8 +50,13 @@ def get_dashboard_stats(period="all"):
     reservation_where = "WHERE reservation_date >= %s" if cutoff_str else ""
     reservation_params = (cutoff_str,) if cutoff_str else ()
 
-    accounting_where = "WHERE day >= %s" if cutoff_str else ""
-    accounting_params = (cutoff_str,) if cutoff_str else ()
+    accounting_limit = {"day": 1, "week": 7, "month": 30}.get(period)
+    if accounting_limit:
+        accounting_from = "(SELECT * FROM accounting ORDER BY id DESC LIMIT %s) t"
+        accounting_params = (accounting_limit,)
+    else:
+        accounting_from = "accounting"
+        accounting_params = ()
 
     try:
         connection = get_connection()
@@ -94,7 +99,7 @@ def get_dashboard_stats(period="all"):
             f"""SELECT COALESCE(SUM(revenue), 0) AS revenue,
                        COALESCE(SUM(expenses), 0) AS expenses,
                        COALESCE(SUM(orders), 0) AS accounting_orders
-                FROM accounting {accounting_where}""",
+                FROM {accounting_from}""",
             accounting_params,
         )
         accounting_revenue = float(accounting["revenue"])
@@ -139,7 +144,7 @@ def get_dashboard_stats(period="all"):
 
         # ===== PERFORMANCE: revenue by day (accounting) =====
         cursor.execute(
-            f"SELECT day, SUM(revenue) AS revenue FROM accounting {accounting_where} GROUP BY day ORDER BY MIN(id) ASC",
+            f"""SELECT day, SUM(revenue) AS revenue FROM {accounting_from} GROUP BY day""",
             accounting_params,
         )
         performance = [
