@@ -1,3 +1,5 @@
+from datetime import date, timedelta
+
 from app.db.db import get_connection
 from fastapi import HTTPException
 
@@ -40,28 +42,51 @@ def get_accountings():
 
 
 def get_sales_summary(period="all"):
-    """Aggregate sales data (revenue/expenses/profit/orders) from real DB rows.
+    """Automatically compute revenue and order counts from real order rows.
 
-    period filter applies on the accounting table; 'day'/'week'/'month' limit
-    to the latest rows based on their creation order.
+    period filter (day/week/month) is based on the order's created_at date.
+    Expenses come from manually entered accounting entries.
     """
     try:
         connection = get_connection()
         cursor = connection.cursor(dictionary=True)
 
-        base_query = "SELECT * FROM accounting"
-
+        order_where = ""
+        order_params = ()
         if period in ("day", "week", "month"):
-            limit = {"day": 1, "week": 7, "month": 30}[period]
-            base_query += " ORDER BY id DESC LIMIT %s"
-            rows = _fetch_all(cursor, base_query, (limit,))
-        else:
-            base_query += " ORDER BY id ASC"
-            rows = _fetch_all(cursor, base_query)
+            cutoff = None
+            if period == "day":
+                cutoff = date.today()
+            elif period == "week":
+                cutoff = date.today() - timedelta(days=7)
+            elif period == "month":
+                cutoff = date.today() - timedelta(days=30)
+            order_where = "WHERE created_at >= %s"
+            order_params = (cutoff,)
 
-        total_revenue = sum(float(r["revenue"] or 0) for r in rows)
-        total_expenses = sum(float(r["expenses"] or 0) for r in rows)
-        total_orders = sum(int(r["orders"] or 0) for r in rows)
+        # Real revenue + orders from the orders table
+        cursor.execute(
+            f"""SELECT
+                    COUNT(*) AS total_orders,
+                    COALESCE(SUM(amount_paid), 0) AS total_revenue,
+                    COALESCE(SUM(total), 0) AS order_value
+                FROM orders {order_where}""",
+            order_params,
+        )
+        stats = cursor.fetchone()
+        total_orders = int(stats["total_orders"])
+        total_revenue = float(stats["total_revenue"])
+
+        # Manual expenses from accounting entries
+        cursor.execute("SELECT COALESCE(SUM(expenses), 0) AS total_expenses FROM accounting")
+        total_expenses = float(cursor.fetchone()["total_expenses"])
+
+        # Recent order rows for reference
+        rows = _fetch_all(
+            cursor,
+            "SELECT * FROM orders " + order_where + " ORDER BY id DESC",
+            order_params if order_params else None,
+        )[:30]
 
         cursor.close()
         connection.close()
